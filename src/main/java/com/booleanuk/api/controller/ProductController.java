@@ -3,8 +3,9 @@ package com.booleanuk.api.controller;
 import com.booleanuk.api.model.Product;
 import com.booleanuk.api.model.ProductRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
@@ -23,25 +24,41 @@ public class ProductController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Product> getAll() {
-        return this.productRepo.findAll();
+    public List<Product> getAllOrByCategory(@RequestParam(required = false) String category) {
+        boolean exists = this.productRepo.doesCategoryExist(category);
+        if (category != null && !exists) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No product of the provided category were found");
+        }
+        if (category != null) {
+            return this.productRepo.findAll(category.toLowerCase());
+        }
+        return this.productRepo.findAll(null);
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Product createProduct(@RequestBody Product product) {
-        this.productRepo.create(
+    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        boolean success = this.productRepo.create(
                 product.getName(),
                 product.getCategory(),
                 product.getPrice()
         );
-        return product;
+
+        if (success) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(product);
+        }
+        else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product with provided name already exists.");
+        }
     }
 
     @GetMapping("{id}")
     @ResponseStatus(HttpStatus.OK)
     public Product getById(@PathVariable int id) {
-        return this.productRepo.findById(id);
+        Product product = this.productRepo.findById(id);
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+        }
+        return product;
     }
 
     @PutMapping("{id}")
@@ -54,7 +71,7 @@ public class ProductController {
                 product.getPrice()
         );
         this.productRepo.updateProduct(productWithId);
-        return productWithId;
+        return product;
     }
 
     @DeleteMapping("{id}")
