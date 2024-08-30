@@ -1,5 +1,7 @@
 package com.booleanuk.api.model;
 
+import java.net.Inet4Address;
+
 public class Product {
     private int id;
     private String name;
@@ -15,27 +17,19 @@ public class Product {
 
     public Product() {}
 
-    public String getName() {
-        return name;
+    public int getId() {
+        return this.id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getName() {
+        return name;
     }
 
     public String getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
     public int getPrice() {
         return price;
-    }
-
-    public void setPrice(int price) {
-        this.price = price;
     }
 }
